@@ -7,8 +7,6 @@
 // @match        https://www.leitstellenspiel.de/*
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @license      GPL-3.0-or-later
-// @updateURL    https://github.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.git
-// @downloadURL  https://github.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.git
 // @grant        GM_addStyle
 // ==/UserScript==
 
