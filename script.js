@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge
 // @namespace    https://www.leitstellenspiel.de/
-// @version      1.1.0
+// @version      1.2.0
 // @description  Die Ausrücke-Verzögerung der Fahrzeuge ermöglicht es, die Zeitspanne zu definieren, die ein Fahrzeug benötigt, um nach einer Alarmierung aus der Wache auszurücken. Diese Funktion erlaubt eine realistischere Simulation des Einsatzgeschehens, indem sie die Reaktionszeiten der Fahrzeuge anpasst. Durch die Konfiguration der Verzögerungszeit können Einsatzleiter die Einsatzplanung optimieren und sicherstellen, dass die Disposition der Einheiten den tatsächlichen Gegebenheiten vor Ort besser entspricht.
 // @author       Hudnur111 - IBoy - Coding Crew Tag 1
 // @match        https://www.leitstellenspiel.de/*
@@ -43,9 +43,11 @@
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Wachen: ${response.statusText}`);
             const wachen = await response.json();
 
-            wachen.sort((a, b) => a.caption.localeCompare(b.caption));
+            // Filtert Wachen nach Typ (nur Feuerwachen, Polizei, etc. zeigen)
+            const filteredWachen = wachen.filter(wache => ['fire_station', 'police_station'].includes(wache.building_type));
+            filteredWachen.sort((a, b) => a.caption.localeCompare(b.caption));
 
-            wachen.forEach(wache => {
+            filteredWachen.forEach(wache => {
                 const wacheItem = document.createElement('li');
                 wacheItem.innerHTML = `<a href="#">${wache.caption}</a>`;
                 wacheItem.dataset.wacheName = wache.caption.toLowerCase();
@@ -54,7 +56,6 @@
             });
         } catch (error) {
             console.error('Fehler beim Laden der Wachen:', error);
-            alert('Wachen konnten nicht geladen werden.');
         }
     }
 
@@ -85,28 +86,10 @@
                 document.body.appendChild(modal);
                 $(modal).modal('show');
             } else {
-                await loadAlternativeVehicles(wacheId, wacheName);
-            }
-        } catch (error) {
-            console.error('Fehler beim Laden der Fahrzeuge:', error);
-            alert(`Fahrzeuge konnten nicht geladen werden.`);
-        }
-    }
-
-    // Lädt alternative Fahrzeugdaten, wenn die erste Anfrage fehlschlägt
-    async function loadAlternativeVehicles(wacheId, wacheName) {
-        try {
-            const response = await fetch(`/api/buildings/${wacheId}`);
-            if (!response.ok) throw new Error(`Fehler beim Abrufen alternativer Fahrzeugdaten: ${response.statusText}`);
-            const wacheData = await response.json();
-            if (wacheData && wacheData.vehicles && wacheData.vehicles.length > 0) {
-                showFahrzeugeDetails(wacheName, wacheData.vehicles);
-            } else {
                 alert(`Keine Fahrzeuge für die Wache ${wacheName} gefunden.`);
             }
         } catch (error) {
-            console.error('Fehler beim Laden der alternativen Fahrzeugdaten:', error);
-            alert(`Alternative Fahrzeugdaten konnten nicht geladen werden.`);
+            console.error('Fehler beim Laden der Fahrzeuge:', error);
         }
     }
 
