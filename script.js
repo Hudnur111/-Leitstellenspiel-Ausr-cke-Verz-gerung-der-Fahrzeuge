@@ -1,120 +1,56 @@
 // ==UserScript==
-// @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge mit GitHub Auto-Update
+// @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge
 // @namespace    https://www.leitstellenspiel.de/
 // @version      1.2.4
-// @description  Dieses Skript ermöglicht es, die Ausrücke-Verzögerung von Fahrzeugen zu konfigurieren, um realistischere Einsatzszenarien zu simulieren. Es wird regelmäßig auf Updates überprüft und automatisch aktualisiert.
+// @description  Die Ausrücke-Verzögerung der Fahrzeuge ermöglicht es, die Zeitspanne zu definieren, die ein Fahrzeug benötigt, um nach einer Alarmierung aus der Wache auszurücken. Diese Funktion erlaubt eine realistischere Simulation des Einsatzgeschehens, indem sie die Reaktionszeiten der Fahrzeuge anpasst. Durch die Konfiguration der Verzögerungszeit können Einsatzleiter die Einsatzplanung optimieren und sicherstellen, dass die Disposition der Einheiten den tatsächlichen Gegebenheiten vor Ort besser entspricht.
 // @author       Hudnur111 - IBoy - Coding Crew Tag 1
 // @match        https://www.leitstellenspiel.de/*
-// @match        *://github.com/*/raw/*
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @license      GPL-3.0-or-later
 // @grant        GM_addStyle
+// @grant        GM_notification
 // @grant        GM_xmlhttpRequest
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_openInTab
-// @run-at       document-idle
-// @updateURL    https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js
-// @downloadURL  https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js
 // ==/UserScript==
 
 (function() {
     'use strict';
-
-    const scriptUpdateUrl = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js'; 
-    const scriptVersionUrl = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script-version.txt'; 
-    const currentVersion = '1.2.4'; 
+    const SCRIPT_NAME = 'Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge';
+    const CURRENT_VERSION = '1.2.4';
+    const UPDATE_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js'; // Update URL for your GitHub repository
+    const VERSION_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/version.txt'; // Update URL for your version file
 
     function checkForUpdate() {
         GM_xmlhttpRequest({
             method: 'GET',
-            url: scriptVersionUrl,
+            url: VERSION_URL,
             onload: function(response) {
-                const latestVersion = response.responseText.trim();
-                if (latestVersion !== currentVersion) {
-                    GM_xmlhttpRequest({
-                        method: 'GET',
-                        url: scriptUpdateUrl,
-                        onload: function(updateResponse) {
-                            GM_setValue('latest-script', updateResponse.responseText);
-                            // Benachrichtigung entfernt
-                        }
-                    });
+                if (response.status === 200) {
+                    const latestVersion = response.responseText.trim();
+                    if (latestVersion !== CURRENT_VERSION) {
+                        notifyUserForUpdate(latestVersion);
+                    }
                 }
+            },
+            onerror: function() {
+                console.error('Fehler beim Abrufen der Versionsinformationen.');
             }
         });
     }
 
-    if (window.location.href.includes('/raw/')) {
-        const tampermonkeyUrl = window.location.href.replace('/raw/', '/files/');
-        GM_openInTab(tampermonkeyUrl, { active: true });
-    } else {
-        checkForUpdate();
-        createMenu();
+    function notifyUserForUpdate(latestVersion) {
+        GM_notification({
+            text: `${SCRIPT_NAME} (Version ${latestVersion}) Jetzt Aktualisieren!`,
+            title: 'Neue Version verfügbar',
+            onclick: function() {
+                window.open(UPDATE_URL, '_blank');
+            }
+        });
     }
 
-    GM_addStyle(`
-        /* Stil für das Dropdown-Menü */
-        .navbar-nav .dropdown-menu {
-            background-color: #ff0000; /* Rot */
-            border: 1px solid #cc0000; /* Dunkleres Rot */
-            border-radius: 0.375rem;
-            padding: 0.5rem;
-        }
-        .navbar-nav .dropdown-menu li a {
-            color: #ffffff; /* Weiß */
-            font-size: 1rem;
-        }
-        .navbar-nav .dropdown-menu li a:hover {
-            background-color: #cc0000; /* Dunkleres Rot beim Hover */
-        }
+    checkForUpdate();
 
-        /* Stil für das Suchfeld */
-        #searchInput {
-            border-radius: 0.375rem;
-            border: 1px solid #ced4da;
-            padding: 0.5rem;
-        }
-
-        /* Stil für das Modal */
-        .modal-content {
-            border-radius: 0.375rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .modal-header {
-            background-color: #007bff;
-            color: #ffffff;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 500;
-        }
-        .modal-body {
-            padding: 1rem;
-        }
-        .modal-footer {
-            border-top: 1px solid #dee2e6;
-            padding: 0.75rem;
-        }
-        .modal-footer .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .modal-footer .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
-        }
-
-        /* Stil für die Formular-Elemente */
-        .form-group label {
-            font-weight: 500;
-        }
-        .form-control {
-            border-radius: 0.375rem;
-            border: 1px solid #ced4da;
-        }
-    `);
+    let isPopupVisible = false;
+    let buttonVisibleUntil = 0;
 
     function createMenu() {
         const navbar = document.querySelector('.navbar-nav');
@@ -142,13 +78,13 @@
 
             const response = await fetch('/api/buildings');
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Wachen: ${response.statusText}`);
-            const wachen = await response.json();
+            let wachen = await response.json();
 
-            const excludedTypes = [6, 2, 20];
+            const excludedTypes = [6, 2, 20]; // 6: Krankenhaus, 2: Leitstelle, 20: Bereitschaftraum
             let filteredWachen = wachen.filter(wache => !excludedTypes.includes(parseInt(wache.building_type, 10)));
 
             if (filteredWachen.length === 0 && wachen.length > 0) {
-                filteredWachen = wachen.filter(wache => wache.building_type && !excludedTypes.includes(wache.building_type));
+                filteredWachen = wachen.filter(wache => wache.building_type && !excludedTypes.includes(parseInt(wache.building_type, 10)));
             }
 
             filteredWachen.sort((a, b) => a.caption.localeCompare(b.caption));
@@ -170,7 +106,11 @@
         const wachenItems = document.querySelectorAll('#wachenMenu li');
 
         wachenItems.forEach(item => {
-            item.style.display = item.dataset.wacheName && item.dataset.wacheName.includes(searchValue) ? '' : 'none';
+            if (item.dataset.wacheName && item.dataset.wacheName.includes(searchValue)) {
+                item.style.display = '';
+            } else if (item.dataset.wacheName) {
+                item.style.display = 'none';
+            }
         });
     }
 
@@ -180,7 +120,7 @@
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Fahrzeuge: ${response.statusText}`);
             const fahrzeuge = await response.json();
 
-            if (fahrzeuge.length > 0) {
+            if (fahrzeuge && fahrzeuge.length > 0) {
                 fahrzeuge.sort((a, b) => a.vehicle_type_caption.localeCompare(b.vehicle_type_caption));
                 const modal = createModal(wacheName, fahrzeuge);
                 document.body.appendChild(modal);
@@ -219,25 +159,24 @@
             </div>
         `;
 
-        modal.querySelector('#saveVerzögerungen').addEventListener('click', () => saveVerzögerungen(fahrzeuge));
+        modal.querySelector('#saveVerzögerungen').addEventListener('click', () => {
+            fahrzeuge.forEach(fz => {
+                const delay = modal.querySelector(`#fz-${fz.id}`).value;
+                setVerzögerung(fz.id, delay);
+            });
+            $(modal).modal('hide');
+        });
 
         return modal;
     }
 
-    function getVerzögerung(vehicleId) {
-        return GM_getValue(`verzögerung-${vehicleId}`, 0);
+    function getVerzögerung(fahrzeugId) {
+        return localStorage.getItem(`verzögerung-${fahrzeugId}`) || 0;
     }
 
-    function saveVerzögerungen(fahrzeuge) {
-        fahrzeuge.forEach(fz => {
-            const delayInput = document.getElementById(`fz-${fz.id}`);
-            const delayValue = parseInt(delayInput.value, 10);
-            if (!isNaN(delayValue)) {
-                GM_setValue(`verzögerung-${fz.id}`, delayValue);
-            }
-        });
-        alert('Verzögerungen gespeichert.');
-        document.querySelector('.modal').remove();
+    function setVerzögerung(fahrzeugId, delay) {
+        localStorage.setItem(`verzögerung-${fahrzeugId}`, delay);
     }
 
+    createMenu();
 })();
