@@ -24,6 +24,9 @@
     const scriptVersionUrl = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script-version.txt'; 
     const currentVersion = '1.2.4'; 
 
+    // URL für das automatische Update des Skripts
+    // Update-URL: https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js
+
     // Funktion zur Überprüfung der Skriptversion
     function checkForUpdate() {
         GM_xmlhttpRequest({
@@ -53,6 +56,70 @@
         checkForUpdate();
         createMenu();
     }
+
+    // Fügt benutzerdefiniertes CSS hinzu
+    GM_addStyle(`
+        /* Stil für das Dropdown-Menü */
+        .navbar-nav .dropdown-menu {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+        }
+        .navbar-nav .dropdown-menu li a {
+            color: #007bff;
+            font-size: 1rem;
+        }
+        .navbar-nav .dropdown-menu li a:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Stil für das Suchfeld */
+        #searchInput {
+            border-radius: 0.375rem;
+            border: 1px solid #ced4da;
+            padding: 0.5rem;
+        }
+
+        /* Stil für das Modal */
+        .modal-content {
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+        .modal-body {
+            padding: 1rem;
+        }
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+            padding: 0.75rem;
+        }
+        .modal-footer .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .modal-footer .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+
+        /* Stil für die Formular-Elemente */
+        .form-group label {
+            font-weight: 500;
+        }
+        .form-control {
+            border-radius: 0.375rem;
+            border: 1px solid #ced4da;
+        }
+    `);
 
     // Erstellt das Menü in der oberen Leiste
     function createMenu() {
@@ -186,5 +253,4 @@
     function setVerzögerung(fahrzeugId, delay) {
         localStorage.setItem(`verzögerung-${fahrzeugId}`, delay);
     }
-
 })();
