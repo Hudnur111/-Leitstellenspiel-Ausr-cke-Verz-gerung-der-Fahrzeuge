@@ -14,6 +14,8 @@
 // @grant        GM_getValue
 // @grant        GM_openInTab
 // @run-at       document-idle
+// @updateURL   https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke
+// @downloadURL https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke
 // ==/UserScript==
 
 (function() {
