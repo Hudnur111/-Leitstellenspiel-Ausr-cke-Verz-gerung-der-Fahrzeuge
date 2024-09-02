@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge
 // @namespace    https://www.leitstellenspiel.de/
-// @version      1.2.0
+// @version      1.2.4
 // @description  Die Ausrücke-Verzögerung der Fahrzeuge ermöglicht es, die Zeitspanne zu definieren, die ein Fahrzeug benötigt, um nach einer Alarmierung aus der Wache auszurücken. Diese Funktion erlaubt eine realistischere Simulation des Einsatzgeschehens, indem sie die Reaktionszeiten der Fahrzeuge anpasst. Durch die Konfiguration der Verzögerungszeit können Einsatzleiter die Einsatzplanung optimieren und sicherstellen, dass die Disposition der Einheiten den tatsächlichen Gegebenheiten vor Ort besser entspricht.
 // @author       Hudnur111 - IBoy - Coding Crew Tag 1
 // @match        https://www.leitstellenspiel.de/*
@@ -43,8 +43,15 @@
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Wachen: ${response.statusText}`);
             const wachen = await response.json();
 
-            // Filtert Wachen nach Typ (nur Feuerwachen, Polizei, etc. zeigen)
-            const filteredWachen = wachen.filter(wache => ['fire_station', 'police_station'].includes(wache.building_type));
+            // Filtert bestimmte Wachen-Typen heraus (Krankenhäuser, Leitstellen, Bereitschafträume)
+            const excludedTypes = [6, 2, 20]; // 6: Krankenhaus, 2: Leitstelle, 20: Bereitschaftraum
+            const filteredWachen = wachen.filter(wache => !excludedTypes.includes(parseInt(wache.building_type, 10)));
+
+            // Hinzufügen eines Fallbacks für Fälle, in denen der building_type möglicherweise nicht richtig erkannt wird
+            if (filteredWachen.length === 0 && wachen.length > 0) {
+                filteredWachen = wachen.filter(wache => wache.building_type && !excludedTypes.includes(wache.building_type));
+            }
+
             filteredWachen.sort((a, b) => a.caption.localeCompare(b.caption));
 
             filteredWachen.forEach(wache => {
