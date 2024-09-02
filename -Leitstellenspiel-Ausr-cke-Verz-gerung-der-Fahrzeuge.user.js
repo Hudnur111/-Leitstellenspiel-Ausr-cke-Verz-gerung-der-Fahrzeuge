@@ -15,9 +15,20 @@
 (function() {
     'use strict';
     const SCRIPT_NAME = 'Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge';
-    const CURRENT_VERSION = '1.2.4';
-    const UPDATE_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js'; // Update URL for your GitHub repository
-    const VERSION_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/version.txt'; // Update URL for your version file
+    const CURRENT_VERSION = '1.5';
+    const UPDATE_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js';
+    const VERSION_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/version.txt';
+
+    function compareVersions(v1, v2) {
+        const v1Parts = v1.split('.').map(Number);
+        const v2Parts = v2.split('.').map(Number);
+
+        for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+            if ((v1Parts[i] || 0) < (v2Parts[i] || 0)) return -1;
+            if ((v1Parts[i] || 0) > (v2Parts[i] || 0)) return 1;
+        }
+        return 0;
+    }
 
     function checkForUpdate() {
         GM_xmlhttpRequest({
@@ -26,7 +37,7 @@
             onload: function(response) {
                 if (response.status === 200) {
                     const latestVersion = response.responseText.trim();
-                    if (latestVersion !== CURRENT_VERSION) {
+                    if (compareVersions(latestVersion, CURRENT_VERSION) > 0) {
                         notifyUserForUpdate(latestVersion);
                     }
                 }
@@ -49,18 +60,16 @@
 
     checkForUpdate();
 
-    let isPopupVisible = false;
-    let buttonVisibleUntil = 0;
-
     function createMenu() {
         const navbar = document.querySelector('.navbar-nav');
-        if (!navbar) return;
+        if (!navbar || document.getElementById('ausrueckVerzoegerungMenu')) return;
 
         const li = document.createElement('li');
+        li.id = 'ausrueckVerzoegerungMenu';
         li.className = 'dropdown';
         li.innerHTML = `
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Ausrückverzögerung <b class="caret"></b></a>
-            <ul class="dropdown-menu" id="wachenMenu" style="max-height: 400px; overflow-y: auto;">
+            <ul class="dropdown-menu" id="menuWachen" style="max-height: 400px; overflow-y: auto;">
                 <li><input type="text" id="searchInput" class="form-control" placeholder="Wache suchen..."></li>
             </ul>
         `;
@@ -73,7 +82,7 @@
 
     async function listWachen() {
         try {
-            const wachenMenu = document.getElementById('wachenMenu');
+            const wachenMenu = document.getElementById('menuWachen');
             if (!wachenMenu) return;
 
             const response = await fetch('/api/buildings');
@@ -103,7 +112,7 @@
 
     function filterWachen() {
         const searchValue = document.getElementById('searchInput').value.toLowerCase();
-        const wachenItems = document.querySelectorAll('#wachenMenu li');
+        const wachenItems = document.querySelectorAll('#menuWachen li');
 
         wachenItems.forEach(item => {
             if (item.dataset.wacheName && item.dataset.wacheName.includes(searchValue)) {
@@ -134,6 +143,9 @@
     }
 
     function createModal(wacheName, fahrzeuge) {
+        const existingModal = document.querySelector('.modal');
+        if (existingModal) existingModal.remove();
+
         const modal = document.createElement('div');
         modal.className = 'modal fade';
         modal.innerHTML = `
@@ -148,7 +160,7 @@
                             ${fahrzeuge.map(fz => `
                                 <div class="form-group">
                                     <label>${fz.vehicle_type_caption || fz.caption || 'Unbekanntes Fahrzeug'}</label>
-                                    <input type="number" class="form-control" id="fz-${fz.id}" placeholder="Verzögerung in Sekunden" value="${getVerzögerung(fz.id)}">
+                                    <input type="number" class="form-control" id="fz-${fz.id}" placeholder="Verzögerung in Sekunden" value="${getVerzögerung(fz.id)}" min="0">
                                 </div>`).join('')}
                         </form>
                     </div>
@@ -175,7 +187,12 @@
     }
 
     function setVerzögerung(fahrzeugId, delay) {
-        localStorage.setItem(`verzögerung-${fahrzeugId}`, delay);
+        const delayValue = parseInt(delay, 10);
+        if (isNaN(delayValue) || delayValue < 0) {
+            alert("Bitte geben Sie eine gültige Verzögerung ein.");
+            return;
+        }
+        localStorage.setItem(`verzögerung-${fahrzeugId}`, delayValue);
     }
 
     createMenu();
