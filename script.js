@@ -54,24 +54,29 @@
     }
 
     GM_addStyle(`
+        /* Stil für das Dropdown-Menü */
         .navbar-nav .dropdown-menu {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background-color: #ff0000; /* Rot */
+            border: 1px solid #cc0000; /* Dunkleres Rot */
             border-radius: 0.375rem;
             padding: 0.5rem;
         }
         .navbar-nav .dropdown-menu li a {
-            color: #007bff;
+            color: #ffffff; /* Weiß */
             font-size: 1rem;
         }
         .navbar-nav .dropdown-menu li a:hover {
-            background-color: #e9ecef;
+            background-color: #cc0000; /* Dunkleres Rot beim Hover */
         }
+
+        /* Stil für das Suchfeld */
         #searchInput {
             border-radius: 0.375rem;
             border: 1px solid #ced4da;
             padding: 0.5rem;
         }
+
+        /* Stil für das Modal */
         .modal-content {
             border-radius: 0.375rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -100,6 +105,8 @@
             background-color: #0056b3;
             border-color: #004085;
         }
+
+        /* Stil für die Formular-Elemente */
         .form-group label {
             font-weight: 500;
         }
@@ -234,4 +241,3 @@
     }
 
 })();
-
