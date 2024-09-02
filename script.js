@@ -1,17 +1,58 @@
 // ==UserScript==
-// @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge
+// @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge mit GitHub Auto-Update
 // @namespace    https://www.leitstellenspiel.de/
 // @version      1.2.4
-// @description  Die Ausrücke-Verzögerung der Fahrzeuge ermöglicht es, die Zeitspanne zu definieren, die ein Fahrzeug benötigt, um nach einer Alarmierung aus der Wache auszurücken. Diese Funktion erlaubt eine realistischere Simulation des Einsatzgeschehens, indem sie die Reaktionszeiten der Fahrzeuge anpasst. Durch die Konfiguration der Verzögerungszeit können Einsatzleiter die Einsatzplanung optimieren und sicherstellen, dass die Disposition der Einheiten den tatsächlichen Gegebenheiten vor Ort besser entspricht.
+// @description  Die Ausrücke-Verzögerung der Fahrzeuge ermöglicht es, die Zeitspanne zu definieren, die ein Fahrzeug benötigt, um nach einer Alarmierung aus der Wache auszurücken. Diese Funktion erlaubt eine realistischere Simulation des Einsatzgeschehens, indem sie die Reaktionszeiten der Fahrzeuge anpasst. Durch die Konfiguration der Verzögerungszeit können Einsatzleiter die Einsatzplanung optimieren und sicherstellen, dass die Disposition der Einheiten den tatsächlichen Gegebenheiten vor Ort besser entspricht. Zusätzlich wird das Skript regelmäßig auf Updates überprüft und bei Verfügbarkeit automatisch aktualisiert.
 // @author       Hudnur111 - IBoy - Coding Crew Tag 1
 // @match        https://www.leitstellenspiel.de/*
+// @match        *://github.com/*/raw/*
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @license      GPL-3.0-or-later
 // @grant        GM_addStyle
+// @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_openInTab
+// @run-at       document-idle
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    // URL zur neuesten Skriptversion und zum Skript
+    const scriptUpdateUrl = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js'; 
+    const scriptVersionUrl = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script-version.txt'; 
+    const currentVersion = '1.2.4'; 
+
+    // Funktion zur Überprüfung der Skriptversion
+    function checkForUpdate() {
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: scriptVersionUrl,
+            onload: function(response) {
+                const latestVersion = response.responseText.trim();
+                if (latestVersion !== currentVersion) {
+                    GM_xmlhttpRequest({
+                        method: 'GET',
+                        url: scriptUpdateUrl,
+                        onload: function(updateResponse) {
+                            GM_setValue('latest-script', updateResponse.responseText);
+                            alert('Ein Update für das Skript ist verfügbar und wurde heruntergeladen. Bitte laden Sie die Seite neu.');
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // Überprüfen, ob die Skript-URL aktualisiert werden muss
+    if (window.location.href.includes('/raw/')) {
+        const tampermonkeyUrl = window.location.href.replace('/raw/', '/files/');
+        GM_openInTab(tampermonkeyUrl, { active: true });
+    } else {
+        checkForUpdate();
+        createMenu();
+    }
 
     // Erstellt das Menü in der oberen Leiste
     function createMenu() {
@@ -43,11 +84,9 @@
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Wachen: ${response.statusText}`);
             const wachen = await response.json();
 
-            // Filtert bestimmte Wachen-Typen heraus (Krankenhäuser, Leitstellen, Bereitschafträume)
-            const excludedTypes = [6, 2, 20]; // 6: Krankenhaus, 2: Leitstelle, 20: Bereitschaftraum
-            const filteredWachen = wachen.filter(wache => !excludedTypes.includes(parseInt(wache.building_type, 10)));
+            const excludedTypes = [6, 2, 20];
+            let filteredWachen = wachen.filter(wache => !excludedTypes.includes(parseInt(wache.building_type, 10)));
 
-            // Hinzufügen eines Fallbacks für Fälle, in denen der building_type möglicherweise nicht richtig erkannt wird
             if (filteredWachen.length === 0 && wachen.length > 0) {
                 filteredWachen = wachen.filter(wache => wache.building_type && !excludedTypes.includes(wache.building_type));
             }
@@ -100,15 +139,6 @@
         }
     }
 
-    // Zeigt die Details der Fahrzeuge einer Wache in einem Modal an
-    function showFahrzeugeDetails(wacheName, fahrzeuge) {
-        fahrzeuge.sort((a, b) => a.vehicle_type_caption.localeCompare(b.vehicle_type_caption));
-
-        const modal = createModal(wacheName, fahrzeuge);
-        document.body.appendChild(modal);
-        $(modal).modal('show');
-    }
-
     // Erstellt ein Modal für die Anzeige und Konfiguration der Fahrzeug-Verzögerungen
     function createModal(wacheName, fahrzeuge) {
         const modal = document.createElement('div');
@@ -156,8 +186,5 @@
     function setVerzögerung(fahrzeugId, delay) {
         localStorage.setItem(`verzögerung-${fahrzeugId}`, delay);
     }
-
-    // Initialisierung des Skripts
-    createMenu();
 
 })();
