@@ -15,13 +15,13 @@
 (function() {
     'use strict';
 
-    // Konstanten für Skriptinformationen
+    // Skriptinformationen
     const SCRIPT_NAME = 'Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge';
     const CURRENT_VERSION = '1.6';
     const UPDATE_URL = 'https://github.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.user.js/raw/main/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.user.js';
     const VERSION_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/version.txt';
 
-    // Funktion zur Überprüfung auf Updates
+    // Überprüft, ob es eine neue Version gibt
     function checkForUpdate() {
         GM_xmlhttpRequest({
             method: 'GET',
@@ -33,7 +33,7 @@
                         notifyUserForUpdate(latestVersion);
                     }
                 } else {
-                    console.error('Fehler beim Abrufen der Versionsinformationen.');
+                    console.error('Fehler beim Abrufen der Versionsinformationen:', response.statusText);
                 }
             },
             onerror: function() {
@@ -42,7 +42,7 @@
         });
     }
 
-    // Benachrichtigung des Benutzers über ein verfügbares Update
+    // Benachrichtigt den Benutzer über ein verfügbares Update
     function notifyUserForUpdate(latestVersion) {
         GM_notification({
             text: `${SCRIPT_NAME} (Version ${latestVersion}) Jetzt aktualisieren!`,
@@ -55,7 +55,7 @@
 
     checkForUpdate();
 
-    // Funktion zur Erstellung des Menüs in der Navigationsleiste
+    // Erstellt das Menü in der Navigationsleiste
     function createMenu() {
         const navbar = document.querySelector('.navbar-nav');
         if (!navbar) return;
@@ -75,7 +75,7 @@
         listWachen();
     }
 
-    // Funktion zum Abrufen und Auflisten der Wachen
+    // Listet die Wachen auf
     async function listWachen() {
         try {
             const wachenMenu = document.getElementById('wachenMenu');
@@ -83,15 +83,29 @@
 
             const response = await fetch('/api/buildings');
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Wachen: ${response.statusText}`);
-            let wachen = await response.json();
+            
+            const wachen = await response.json();
 
-            const excludedTypes = [6, 2, 20]; // 6: Krankenhaus, 2: Leitstelle, 20: Bereitschaftraum
+            // Überprüft, ob die API-Antwort ein Array ist
+            if (!Array.isArray(wachen)) {
+                console.error('Die API-Antwort ist kein Array:', wachen);
+                return;
+            }
+
+            // Filtert die Wachen basierend auf den ausgeschlossenen Typen
+            const excludedTypes = [6, 2, 20];
             let filteredWachen = wachen.filter(wache => !excludedTypes.includes(parseInt(wache.building_type, 10)));
 
             if (filteredWachen.length === 0 && wachen.length > 0) {
                 filteredWachen = wachen.filter(wache => wache.building_type && !excludedTypes.includes(parseInt(wache.building_type, 10)));
             }
 
+            if (filteredWachen.length === 0) {
+                console.warn('Keine Wachen gefunden oder alle Wachen sind ausgeschlossen.');
+                return;
+            }
+
+            // Sortiert und fügt die Wachen zum Menü hinzu
             filteredWachen.sort((a, b) => a.caption.localeCompare(b.caption));
 
             filteredWachen.forEach(wache => {
@@ -106,7 +120,7 @@
         }
     }
 
-    // Funktion zum Filtern der Wachen in der Suchleiste
+    // Filtert die Wachen in der Suchleiste
     function filterWachen() {
         const searchValue = document.getElementById('searchInput').value.toLowerCase();
         const wachenItems = document.querySelectorAll('#wachenMenu li');
@@ -120,14 +134,21 @@
         });
     }
 
-    // Funktion zum Abrufen und Anzeigen der Fahrzeuge einer Wache
+    // Zeigt die Fahrzeuge einer Wache an
     async function showFahrzeuge(wacheId, wacheName) {
         try {
             const response = await fetch(`/api/buildings/${wacheId}/vehicles`);
             if (!response.ok) throw new Error(`Fehler beim Abrufen der Fahrzeuge: ${response.statusText}`);
+
             const fahrzeuge = await response.json();
 
-            if (fahrzeuge && fahrzeuge.length > 0) {
+            // Überprüft, ob die API-Antwort ein Array ist
+            if (!Array.isArray(fahrzeuge)) {
+                console.error('Die API-Antwort für Fahrzeuge ist kein Array:', fahrzeuge);
+                return;
+            }
+
+            if (fahrzeuge.length > 0) {
                 fahrzeuge.sort((a, b) => a.vehicle_type_caption.localeCompare(b.vehicle_type_caption));
                 const modal = createModal(wacheName, fahrzeuge);
                 document.body.appendChild(modal);
@@ -140,7 +161,7 @@
         }
     }
 
-    // Funktion zur Erstellung des Modals zur Konfiguration der Verzögerungen
+    // Erstellt das Modal zur Konfiguration der Verzögerungen
     function createModal(wacheName, fahrzeuge) {
         const modal = document.createElement('div');
         modal.className = 'modal fade';
@@ -178,21 +199,16 @@
         return modal;
     }
 
-    // Funktion zum Abrufen der gespeicherten Verzögerungszeit eines Fahrzeugs
+    // Ruft die gespeicherte Verzögerungszeit eines Fahrzeugs ab
     function getVerzögerung(fahrzeugId) {
         return localStorage.getItem(`verzögerung-${fahrzeugId}`) || 0;
     }
 
-    // Funktion zum Speichern der Verzögerungszeit eines Fahrzeugs
+    // Speichert die Verzögerungszeit eines Fahrzeugs
     function setVerzögerung(fahrzeugId, delay) {
         localStorage.setItem(`verzögerung-${fahrzeugId}`, delay);
     }
 
     // Menü erstellen
-    createMenu();
-})();
-
-    }
-
     createMenu();
 })();
