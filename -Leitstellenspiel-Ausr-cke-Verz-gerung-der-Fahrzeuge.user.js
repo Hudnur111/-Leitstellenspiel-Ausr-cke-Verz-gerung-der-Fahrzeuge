@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge
 // @namespace    https://www.leitstellenspiel.de/
-// @version      1.5
-// @description  Die Ausrücke-Verzögerung der Fahrzeuge ermöglicht es, die Zeitspanne zu definieren, die ein Fahrzeug benötigt, um nach einer Alarmierung aus der Wache auszurücken. Diese Funktion erlaubt eine realistischere Simulation des Einsatzgeschehens, indem sie die Reaktionszeiten der Fahrzeuge anpasst. Durch die Konfiguration der Verzögerungszeit können Einsatzleiter die Einsatzplanung optimieren und sicherstellen, dass die Disposition der Einheiten den tatsächlichen Gegebenheiten vor Ort besser entspricht.
+// @version      1.6
+// @description  Ermöglicht die Konfiguration der Ausrücke-Verzögerung von Fahrzeugen, um eine realistischere Simulation der Einsatzzeiten zu gewährleisten.
 // @author       Hudnur111 - IBoy - Coding Crew Tag 1
 // @match        https://www.leitstellenspiel.de/*
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -14,22 +14,14 @@
 
 (function() {
     'use strict';
+
+    // Konstanten für Skriptinformationen
     const SCRIPT_NAME = 'Leitstellenspiel Ausrücke-Verzögerung der Fahrzeuge';
-    const CURRENT_VERSION = '1.5';
-    const UPDATE_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/script.js';
+    const CURRENT_VERSION = '1.6';
+    const UPDATE_URL = 'https://github.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.user.js/raw/main/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.user.js';
     const VERSION_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/version.txt';
 
-    function compareVersions(v1, v2) {
-        const v1Parts = v1.split('.').map(Number);
-        const v2Parts = v2.split('.').map(Number);
-
-        for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
-            if ((v1Parts[i] || 0) < (v2Parts[i] || 0)) return -1;
-            if ((v1Parts[i] || 0) > (v2Parts[i] || 0)) return 1;
-        }
-        return 0;
-    }
-
+    // Funktion zur Überprüfung auf Updates
     function checkForUpdate() {
         GM_xmlhttpRequest({
             method: 'GET',
@@ -37,9 +29,11 @@
             onload: function(response) {
                 if (response.status === 200) {
                     const latestVersion = response.responseText.trim();
-                    if (compareVersions(latestVersion, CURRENT_VERSION) > 0) {
+                    if (latestVersion !== CURRENT_VERSION) {
                         notifyUserForUpdate(latestVersion);
                     }
+                } else {
+                    console.error('Fehler beim Abrufen der Versionsinformationen.');
                 }
             },
             onerror: function() {
@@ -48,9 +42,10 @@
         });
     }
 
+    // Benachrichtigung des Benutzers über ein verfügbares Update
     function notifyUserForUpdate(latestVersion) {
         GM_notification({
-            text: `${SCRIPT_NAME} (Version ${latestVersion}) Jetzt Aktualisieren!`,
+            text: `${SCRIPT_NAME} (Version ${latestVersion}) Jetzt aktualisieren!`,
             title: 'Neue Version verfügbar',
             onclick: function() {
                 window.open(UPDATE_URL, '_blank');
@@ -60,16 +55,16 @@
 
     checkForUpdate();
 
+    // Funktion zur Erstellung des Menüs in der Navigationsleiste
     function createMenu() {
         const navbar = document.querySelector('.navbar-nav');
-        if (!navbar || document.getElementById('ausrueckVerzoegerungMenu')) return;
+        if (!navbar) return;
 
         const li = document.createElement('li');
-        li.id = 'ausrueckVerzoegerungMenu';
         li.className = 'dropdown';
         li.innerHTML = `
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Ausrückverzögerung <b class="caret"></b></a>
-            <ul class="dropdown-menu" id="menuWachen" style="max-height: 400px; overflow-y: auto;">
+            <ul class="dropdown-menu" id="wachenMenu" style="max-height: 400px; overflow-y: auto;">
                 <li><input type="text" id="searchInput" class="form-control" placeholder="Wache suchen..."></li>
             </ul>
         `;
@@ -80,9 +75,10 @@
         listWachen();
     }
 
+    // Funktion zum Abrufen und Auflisten der Wachen
     async function listWachen() {
         try {
-            const wachenMenu = document.getElementById('menuWachen');
+            const wachenMenu = document.getElementById('wachenMenu');
             if (!wachenMenu) return;
 
             const response = await fetch('/api/buildings');
@@ -110,9 +106,10 @@
         }
     }
 
+    // Funktion zum Filtern der Wachen in der Suchleiste
     function filterWachen() {
         const searchValue = document.getElementById('searchInput').value.toLowerCase();
-        const wachenItems = document.querySelectorAll('#menuWachen li');
+        const wachenItems = document.querySelectorAll('#wachenMenu li');
 
         wachenItems.forEach(item => {
             if (item.dataset.wacheName && item.dataset.wacheName.includes(searchValue)) {
@@ -123,6 +120,7 @@
         });
     }
 
+    // Funktion zum Abrufen und Anzeigen der Fahrzeuge einer Wache
     async function showFahrzeuge(wacheId, wacheName) {
         try {
             const response = await fetch(`/api/buildings/${wacheId}/vehicles`);
@@ -142,10 +140,8 @@
         }
     }
 
+    // Funktion zur Erstellung des Modals zur Konfiguration der Verzögerungen
     function createModal(wacheName, fahrzeuge) {
-        const existingModal = document.querySelector('.modal');
-        if (existingModal) existingModal.remove();
-
         const modal = document.createElement('div');
         modal.className = 'modal fade';
         modal.innerHTML = `
@@ -160,7 +156,7 @@
                             ${fahrzeuge.map(fz => `
                                 <div class="form-group">
                                     <label>${fz.vehicle_type_caption || fz.caption || 'Unbekanntes Fahrzeug'}</label>
-                                    <input type="number" class="form-control" id="fz-${fz.id}" placeholder="Verzögerung in Sekunden" value="${getVerzögerung(fz.id)}" min="0">
+                                    <input type="number" class="form-control" id="fz-${fz.id}" placeholder="Verzögerung in Sekunden" value="${getVerzögerung(fz.id)}">
                                 </div>`).join('')}
                         </form>
                     </div>
@@ -182,17 +178,20 @@
         return modal;
     }
 
+    // Funktion zum Abrufen der gespeicherten Verzögerungszeit eines Fahrzeugs
     function getVerzögerung(fahrzeugId) {
         return localStorage.getItem(`verzögerung-${fahrzeugId}`) || 0;
     }
 
+    // Funktion zum Speichern der Verzögerungszeit eines Fahrzeugs
     function setVerzögerung(fahrzeugId, delay) {
-        const delayValue = parseInt(delay, 10);
-        if (isNaN(delayValue) || delayValue < 0) {
-            alert("Bitte geben Sie eine gültige Verzögerung ein.");
-            return;
-        }
-        localStorage.setItem(`verzögerung-${fahrzeugId}`, delayValue);
+        localStorage.setItem(`verzögerung-${fahrzeugId}`, delay);
+    }
+
+    // Menü erstellen
+    createMenu();
+})();
+
     }
 
     createMenu();
