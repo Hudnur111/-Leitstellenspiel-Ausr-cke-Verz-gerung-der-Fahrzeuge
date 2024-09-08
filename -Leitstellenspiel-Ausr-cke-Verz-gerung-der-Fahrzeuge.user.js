@@ -126,11 +126,8 @@
             `;
             fahrzeugList.appendChild(fzItem);
 
-            document.getElementById(`fz-${fz.id}`).addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    saveDelays(fahrzeuge);
-                }
-            });
+            // Aktualisiere den Wert des Eingabefeldes mit der gespeicherten Verzögerung
+            document.getElementById(`fz-${fz.id}`).value = getVerzögerung(fz.id);
         });
 
         document.getElementById('saveDelays').addEventListener('click', () => {
@@ -139,6 +136,15 @@
 
         toggleButton.addEventListener('click', () => {
             sidebar.style.display = (sidebar.style.display === 'none') ? 'block' : 'none';
+        });
+
+        // Ermögliche das Speichern durch Drücken der Enter-Taste
+        document.querySelectorAll('.delayInput').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    saveDelays(fahrzeuge);
+                }
+            });
         });
     }
 
@@ -175,8 +181,22 @@
             background-color: #0056b3;
             border-color: #004085;
         }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
     `);
 
     checkForUpdate(); // Check for updates when script is loaded
     loadFahrzeuge(); // Initialize the script when the page is loaded
 })();
+
