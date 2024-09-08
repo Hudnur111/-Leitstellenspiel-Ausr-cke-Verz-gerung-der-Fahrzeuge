@@ -12,6 +12,8 @@
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
+// Betatester: m7e
+
 (function() {
     'use strict';
 
