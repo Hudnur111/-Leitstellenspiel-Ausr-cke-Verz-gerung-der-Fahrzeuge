@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Leitstellenspiel Ausrücke-Verzögerung für einzelne Wache
 // @namespace    https://www.leitstellenspiel.de/
-// @version      3.0
+// @version      3.1
 // @description  Zeigt Fahrzeuge der aktuellen Wache und ermöglicht die Konfiguration der Ausrückverzögerungen für diese Fahrzeuge (Rechtes Menü mit Scrollfunktion).
 // @author       Hudnur111 - IBoy - Coding Crew Tag 1
 // @match        https://www.leitstellenspiel.de/buildings/*
@@ -19,7 +19,7 @@
 
     // Skriptinformationen
     const SCRIPT_NAME = 'Leitstellenspiel Ausrücke-Verzögerung für einzelne Wache';
-    const CURRENT_VERSION = '3.0';
+    const CURRENT_VERSION = '3.1';
     const UPDATE_URL = 'https://github.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.user.js/raw/main/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge.user.js';
     const VERSION_URL = 'https://raw.githubusercontent.com/Hudnur111/-Leitstellenspiel-Ausr-cke-Verz-gerung-der-Fahrzeuge/main/version.txt';
 
@@ -126,8 +126,8 @@
             `;
             fahrzeugList.appendChild(fzItem);
 
-            // Aktualisiere den Wert des Eingabefeldes mit der gespeicherten Verzögerung
-            document.getElementById(`fz-${fz.id}`).value = getVerzögerung(fz.id);
+            // Debugging: Ausgabe der Verzögerungen
+            console.log(`Fahrzeug ID ${fz.id}: ${getVerzögerung(fz.id)}`);
         });
 
         document.getElementById('saveDelays').addEventListener('click', () => {
@@ -151,6 +151,7 @@
     function saveDelays(fahrzeuge) {
         fahrzeuge.forEach(fz => {
             const delay = document.getElementById(`fz-${fz.id}`).value;
+            console.log(`Speichern: Fahrzeug ID ${fz.id}, Verzögerung ${delay}`); // Debugging
             setVerzögerung(fz.id, delay);
         });
         document.getElementById('saveFeedback').style.display = 'inline';
@@ -160,7 +161,9 @@
     }
 
     function getVerzögerung(fahrzeugId) {
-        return localStorage.getItem(`verzögerung-${fahrzeugId}`) || 0;
+        const delay = localStorage.getItem(`verzögerung-${fahrzeugId}`) || 0;
+        console.log(`Verzögerung für Fahrzeug ID ${fahrzeugId}: ${delay}`); // Debugging
+        return delay;
     }
 
     function setVerzögerung(fahrzeugId, delay) {
@@ -199,4 +202,3 @@
     checkForUpdate(); // Check for updates when script is loaded
     loadFahrzeuge(); // Initialize the script when the page is loaded
 })();
-
