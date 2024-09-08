@@ -6,6 +6,8 @@ Autor: Hudnur111 - IBoy - Coding Crew Tag 1
 
 Website: Leitstellenspiel
 
+---------------------------
+
 *Beschreibung:*
 Dieses Benutzer-Skript für das Spiel „Leitstellenspiel“ bietet eine erweiterte Möglichkeit zur Konfiguration von Ausrückverzögerungen für Fahrzeuge einer einzelnen Wache. Die Anwendung fügt eine benutzerfreundliche Sidebar am rechten Rand der Seite hinzu, die es ermöglicht, Verzögerungen für jedes Fahrzeug der aktuell angezeigten Wache anzupassen. Die Sidebar bietet eine Scrollfunktion für lange Listen und ein professionell gestaltetes Layout, das eine einfache Bedienung gewährleistet.
 
